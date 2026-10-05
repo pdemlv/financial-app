@@ -1,0 +1,789 @@
+<!DOCTYPE html>
+<html lang="uk">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Зразки інтерфейсу — Веб-сайт для персонального фінансового обліку</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Manrope:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+  :root{
+    box-sizing:border-box;
+    padding-top:env(safe-area-inset-top,0px);
+    padding-bottom:env(safe-area-inset-bottom,0px);
+    --ink:#16201D;
+    --ink-soft:#6B7670;
+    --paper:#F7F7F4;
+    --sheet:#FFFFFF;
+    --line:#E1E4DF;
+    --plus:#1F7A5A;
+    --plus-soft:#E7F2ED;
+    --minus:#B04A33;
+    --minus-soft:#F7EAE6;
+    --page:#EDEDE8;
+  }
+  *{box-sizing:border-box;}
+  body{
+    margin:0;
+    background:var(--page);
+    color:var(--ink);
+    font-family:"Manrope",-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,sans-serif;
+    font-size:15px;
+    line-height:1.45;
+    -webkit-font-smoothing:antialiased;
+  }
+  .num{font-variant-numeric:tabular-nums;}
+  .wrap{max-width:1120px;margin:0 auto;padding:40px 24px 80px;}
+
+  .doc-head{margin-bottom:40px;max-width:70ch;}
+  .doc-head h1{font-size:28px;line-height:1.2;margin:0 0 10px;font-weight:700;letter-spacing:-0.02em;}
+  .doc-head p{margin:0;color:var(--ink-soft);}
+
+  .plate{margin:0 0 56px;}
+  .plate > h2{font-size:17px;font-weight:600;margin:0 0 4px;}
+  .plate > .cap{margin:0 0 16px;color:var(--ink-soft);font-size:13.5px;max-width:70ch;}
+
+  .frame{
+    background:var(--sheet);
+    border:1px solid #D9DBD5;
+    border-radius:12px;
+    overflow:hidden;
+    box-shadow:0 1px 2px rgba(22,32,29,.05);
+  }
+  .bar{
+    display:flex;align-items:center;gap:8px;
+    padding:9px 12px;background:#F1F1EC;border-bottom:1px solid var(--line);
+  }
+  .dot{width:9px;height:9px;border-radius:50%;background:#D3D5CF;}
+  .url{
+    margin-left:6px;font-size:12px;color:var(--ink-soft);
+    background:var(--sheet);border:1px solid var(--line);border-radius:5px;padding:3px 10px;
+  }
+
+  /* каркас застосунку */
+  .app{display:grid;grid-template-columns:220px 1fr;min-height:520px;background:var(--paper);}
+  .side{background:var(--sheet);border-right:1px solid var(--line);padding:20px 14px;}
+  .brand{display:flex;align-items:center;gap:9px;padding:0 8px 20px;font-weight:700;letter-spacing:-0.01em;}
+  .brand i{width:22px;height:22px;border-radius:6px;background:var(--plus);display:block;}
+  .nav{display:flex;flex-direction:column;gap:2px;}
+  .nav a{
+    display:block;padding:9px 10px;border-radius:7px;color:var(--ink-soft);
+    text-decoration:none;font-size:14.5px;font-weight:500;
+  }
+  .nav a.on{background:var(--plus-soft);color:var(--plus);font-weight:600;}
+  .side .foot{margin-top:28px;padding:12px 10px 0;border-top:1px solid var(--line);font-size:13px;color:var(--ink-soft);}
+
+  .main{padding:28px 32px 36px;min-width:0;}
+  .main-head{display:flex;align-items:flex-start;justify-content:space-between;gap:16px;margin-bottom:24px;}
+  .main-head h3{margin:0;font-size:22px;font-weight:600;letter-spacing:-0.01em;}
+  .main-head p{margin:3px 0 0;color:var(--ink-soft);font-size:13px;}
+
+  .btn{
+    display:inline-flex;align-items:center;justify-content:center;gap:7px;
+    height:40px;padding:0 16px;border-radius:8px;border:1px solid transparent;
+    font:inherit;font-size:14.5px;font-weight:600;cursor:default;white-space:nowrap;
+  }
+  .btn-main{background:var(--plus);color:#fff;}
+  .btn-ghost{background:transparent;border-color:var(--line);color:var(--ink);}
+  .btn-danger{background:transparent;border-color:var(--minus);color:var(--minus);}
+  .btn-sm{height:32px;padding:0 11px;font-size:13px;}
+  .btn-wide{width:100%;}
+
+  /* баланс */
+  .balance{margin-bottom:28px;}
+  .balance .lbl{font-size:13px;color:var(--ink-soft);margin-bottom:2px;}
+  .balance .val{font-size:56px;line-height:1.05;font-weight:700;letter-spacing:-0.025em;}
+  .balance .note{margin-top:6px;font-size:13px;color:var(--ink-soft);}
+
+  .totals{display:grid;grid-template-columns:repeat(3,1fr);gap:1px;background:var(--line);border:1px solid var(--line);border-radius:10px;overflow:hidden;margin-bottom:28px;}
+  .totals div{background:var(--sheet);padding:14px 16px;}
+  .totals .k{font-size:13px;color:var(--ink-soft);margin-bottom:3px;}
+  .totals .v{font-size:28px;font-weight:600;letter-spacing:-0.02em;line-height:1.15;}
+  .plus{color:var(--plus);}
+  .minus{color:var(--minus);}
+
+  /* стрічка операцій */
+  .ledger{background:var(--sheet);border:1px solid var(--line);border-radius:10px;}
+  .day{display:flex;justify-content:space-between;align-items:baseline;padding:11px 16px;border-bottom:1px solid var(--line);background:#FBFBF9;}
+  .day .d{font-size:13px;font-weight:600;color:var(--ink-soft);}
+  .day .s{font-size:13px;color:var(--ink-soft);}
+  .row{display:flex;align-items:center;gap:12px;padding:12px 16px;border-bottom:1px solid var(--line);}
+  .row:last-child{border-bottom:none;}
+  .row .tag{width:8px;height:8px;border-radius:50%;flex:none;}
+  .row .who{min-width:0;flex:1;}
+  .row .who b{display:block;font-weight:600;font-size:15px;}
+  .row .who span{display:block;font-size:13px;color:var(--ink-soft);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+  .row .amt{font-size:16px;font-weight:600;white-space:nowrap;}
+  .row.hov{background:var(--paper);}
+  .row .acts{display:flex;gap:6px;}
+
+  /* фільтри */
+  .filters{display:flex;flex-wrap:wrap;gap:8px;margin-bottom:16px;align-items:center;}
+  .chip{
+    display:inline-flex;align-items:center;gap:7px;height:36px;padding:0 13px;
+    border:1px solid var(--line);border-radius:8px;background:var(--sheet);font-size:14px;color:var(--ink);
+  }
+  .chip.on{border-color:var(--plus);background:var(--plus-soft);color:var(--plus);font-weight:600;}
+  .chip .car{font-size:10px;color:var(--ink-soft);}
+  .filters .clear{font-size:13.5px;color:var(--minus);text-decoration:none;margin-left:4px;}
+  .result{font-size:13.5px;color:var(--ink-soft);margin-bottom:12px;}
+
+  /* форма */
+  .field{margin-bottom:16px;}
+  .field label{display:block;font-size:13px;font-weight:500;color:var(--ink-soft);margin-bottom:5px;}
+  .input{
+    display:flex;align-items:center;justify-content:space-between;
+    height:44px;padding:0 13px;border:1px solid var(--line);border-radius:8px;background:var(--sheet);font-size:15px;
+  }
+  .input.big{height:56px;font-size:24px;font-weight:600;}
+  .input.focus{border-color:var(--plus);box-shadow:0 0 0 3px rgba(31,122,90,.14);}
+  .input.err{border-color:var(--minus);}
+  .err-msg{margin-top:5px;font-size:13px;color:var(--minus);}
+  .ph{color:#A8AFAA;}
+  .seg{display:grid;grid-template-columns:1fr 1fr;border:1px solid var(--line);border-radius:8px;overflow:hidden;}
+  .seg div{padding:11px 0;text-align:center;font-size:14.5px;font-weight:600;color:var(--ink-soft);}
+  .seg .on-minus{background:var(--minus-soft);color:var(--minus);}
+  .seg .on-plus{background:var(--plus-soft);color:var(--plus);}
+
+  .modal-stage{position:relative;background:var(--paper);padding:0;}
+  .scrim{position:absolute;inset:0;background:rgba(22,32,29,.42);}
+  .modal{
+    position:relative;z-index:2;width:min(460px,92%);margin:38px auto;background:var(--sheet);
+    border-radius:12px;padding:22px;box-shadow:0 18px 44px rgba(22,32,29,.22);
+  }
+  .modal h4{margin:0 0 18px;font-size:19px;font-weight:600;}
+  .modal-foot{display:flex;gap:10px;justify-content:flex-end;margin-top:22px;}
+
+  /* категорії */
+  .cols{display:grid;grid-template-columns:1fr 1fr;gap:20px;}
+  .col h5{margin:0 0 10px;font-size:14px;font-weight:600;color:var(--ink-soft);}
+  .cat{display:flex;align-items:center;gap:10px;padding:11px 14px;border:1px solid var(--line);border-top:none;background:var(--sheet);}
+  .col .cat:first-of-type{border-top:1px solid var(--line);border-radius:8px 8px 0 0;}
+  .col .cat:last-of-type{border-radius:0 0 8px 8px;}
+  .cat .nm{flex:1;font-weight:500;}
+  .cat .cnt{font-size:13px;color:var(--ink-soft);}
+
+  /* аналітика */
+  .charts{display:grid;grid-template-columns:1fr 1fr;gap:20px;}
+  .card{background:var(--sheet);border:1px solid var(--line);border-radius:10px;padding:18px;}
+  .card h5{margin:0 0 14px;font-size:15px;font-weight:600;}
+  .legend{margin-top:14px;display:flex;flex-direction:column;gap:7px;font-size:13.5px;}
+  .legend div{display:flex;align-items:center;gap:8px;}
+  .legend i{width:9px;height:9px;border-radius:2px;flex:none;}
+  .legend .lg-n{flex:1;}
+  .legend .lg-v{color:var(--ink-soft);}
+
+  .empty{text-align:center;padding:42px 20px;background:var(--sheet);border:1px dashed var(--line);border-radius:10px;}
+  .empty p{margin:0 0 16px;color:var(--ink-soft);max-width:34ch;margin-inline:auto;}
+
+  /* авторизація */
+  .auth{min-height:440px;display:flex;align-items:center;justify-content:center;background:var(--paper);padding:34px 20px;}
+  .auth-box{width:min(380px,100%);background:var(--sheet);border:1px solid var(--line);border-radius:12px;padding:26px;}
+  .auth-box h4{margin:0 0 4px;font-size:21px;font-weight:700;letter-spacing:-0.01em;}
+  .auth-box .sub{margin:0 0 20px;font-size:13.5px;color:var(--ink-soft);}
+  .auth-box .alt{margin:16px 0 0;text-align:center;font-size:13.5px;color:var(--ink-soft);}
+  .auth-box .alt a{color:var(--plus);font-weight:600;text-decoration:none;}
+  .hint{font-size:12.5px;color:var(--ink-soft);margin-top:5px;}
+
+  /* телефон */
+  .phones{display:flex;flex-wrap:wrap;gap:24px;}
+  .phone{width:300px;border:1px solid #D9DBD5;border-radius:22px;overflow:hidden;background:var(--sheet);box-shadow:0 1px 2px rgba(22,32,29,.05);}
+  .phone .screen{background:var(--paper);min-height:530px;display:flex;flex-direction:column;}
+  .ph-top{padding:16px 16px 0;}
+  .ph-body{padding:14px 16px 16px;flex:1;}
+  .tabbar{
+    display:grid;grid-template-columns:1fr 1fr 64px 1fr 1fr;align-items:center;
+    border-top:1px solid var(--line);background:var(--sheet);padding:9px 6px calc(9px + env(safe-area-inset-bottom,0px));
+  }
+  .tabbar span{text-align:center;font-size:11.5px;color:var(--ink-soft);}
+  .tabbar span.on{color:var(--plus);font-weight:700;}
+  .fab{width:46px;height:46px;border-radius:50%;background:var(--plus);color:#fff;display:flex;align-items:center;justify-content:center;font-size:24px;font-weight:600;margin:0 auto;}
+  .sheet-stage{position:relative;}
+  .sheet{position:relative;z-index:2;margin-top:92px;background:var(--sheet);border-radius:14px 14px 0 0;padding:18px 16px 20px;box-shadow:0 -10px 30px rgba(22,32,29,.16);}
+  .grab{width:38px;height:4px;border-radius:2px;background:var(--line);margin:0 auto 14px;}
+  .toast{
+    background:var(--ink);color:#fff;border-radius:8px;padding:10px 14px;font-size:13.5px;
+    display:inline-flex;align-items:center;gap:8px;
+  }
+
+  @media (max-width:860px){
+    .app{grid-template-columns:1fr;}
+    .side{display:none;}
+    .main{padding:20px 16px 26px;}
+    .charts,.cols,.totals{grid-template-columns:1fr;}
+    .balance .val{font-size:40px;}
+  }
+</style>
+</head>
+<body>
+<div class="wrap">
+
+<div class="doc-head">
+  <h1>Зразки користувацького інтерфейсу</h1>
+  <p>Статичні макети ключових екранів веб-сайту для персонального фінансового обліку. Побудовані за токенами з <code>docs/ui/design-spec.md</code>: суми набрані табличними цифрами, операції подані суцільною стрічкою з підсумком дня, доходи й витрати розрізняються знаком, кольором і підписом. Дані на макетах — приклад для одного облікового запису за жовтень 2026 року.</p>
+</div>
+
+<!-- 1 -->
+<section class="plate">
+  <h2>1. Вхід і реєстрація</h2>
+  <p class="cap">Дві окремі сторінки з однаковою структурою. Повідомлення про помилку входу не уточнює, яке саме поле хибне (FR-2). Вимога до пароля показана до того, як користувач натисне «Створити акаунт».</p>
+  <div style="display:grid;grid-template-columns:1fr 1fr;gap:20px;">
+    <div class="frame">
+      <div class="bar"><span class="dot"></span><span class="dot"></span><span class="dot"></span><span class="url">groshi.app/login</span></div>
+      <div class="auth">
+        <div class="auth-box">
+          <h4>З поверненням</h4>
+          <p class="sub">Увійдіть, щоб побачити свій баланс</p>
+          <div class="field">
+            <label>Email</label>
+            <div class="input"><span>petro@example.com</span></div>
+          </div>
+          <div class="field">
+            <label>Пароль</label>
+            <div class="input err"><span>••••••••</span></div>
+            <div class="err-msg">Неправильний email або пароль</div>
+          </div>
+          <div class="btn btn-main btn-wide">Увійти</div>
+          <p class="alt">Ще немає акаунта? <a href="#">Зареєструватися</a></p>
+        </div>
+      </div>
+    </div>
+    <div class="frame">
+      <div class="bar"><span class="dot"></span><span class="dot"></span><span class="dot"></span><span class="url">groshi.app/register</span></div>
+      <div class="auth">
+        <div class="auth-box">
+          <h4>Почніть вести облік</h4>
+          <p class="sub">Категорії вже готові — залишиться додати першу операцію</p>
+          <div class="field">
+            <label>Email</label>
+            <div class="input focus"><span class="ph">ваша@пошта</span></div>
+          </div>
+          <div class="field">
+            <label>Пароль</label>
+            <div class="input"><span class="ph">Не менше 8 символів</span></div>
+            <div class="hint">Пароль зберігається у зашифрованому вигляді</div>
+          </div>
+          <div class="field">
+            <label>Повторіть пароль</label>
+            <div class="input"><span class="ph">Ще раз</span></div>
+          </div>
+          <div class="btn btn-main btn-wide">Створити акаунт</div>
+          <p class="alt">Уже маєте акаунт? <a href="#">Увійти</a></p>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- 2 -->
+<section class="plate">
+  <h2>2. Головна сторінка</h2>
+  <p class="cap">Баланс — найбільший елемент сторінки (FR-18). Під ним підсумки за поточний місяць (FR-19) і остання стрічка операцій. Кнопка додавання завжди у верхньому правому куті контенту.</p>
+  <div class="frame">
+    <div class="bar"><span class="dot"></span><span class="dot"></span><span class="dot"></span><span class="url">groshi.app/dashboard</span></div>
+    <div class="app">
+      <aside class="side">
+        <div class="brand"><i></i>Гроші</div>
+        <nav class="nav">
+          <a href="#" class="on">Головна</a>
+          <a href="#">Операції</a>
+          <a href="#">Категорії</a>
+          <a href="#">Аналітика</a>
+        </nav>
+        <div class="foot">petro@example.com<br><a href="#" style="color:var(--ink-soft)">Вийти</a></div>
+      </aside>
+      <div class="main">
+        <div class="main-head">
+          <div>
+            <h3>Головна</h3>
+            <p>Жовтень 2026</p>
+          </div>
+          <div class="btn btn-main">+ Додати операцію</div>
+        </div>
+
+        <div class="balance">
+          <div class="lbl">Поточний баланс</div>
+          <div class="val num plus">48 320,75 ₴</div>
+          <div class="note">За жовтень баланс зріс на 13 559,75 ₴</div>
+        </div>
+
+        <div class="totals">
+          <div><div class="k">Доходи за місяць</div><div class="v num plus">+32 500,00 ₴</div></div>
+          <div><div class="k">Витрати за місяць</div><div class="v num minus">−18 940,25 ₴</div></div>
+          <div><div class="k">Різниця</div><div class="v num">+13 559,75 ₴</div></div>
+        </div>
+
+        <div class="main-head" style="margin-bottom:12px;">
+          <div><h3 style="font-size:17px;">Останні операції</h3></div>
+          <a href="#" style="color:var(--plus);font-size:14px;font-weight:600;text-decoration:none;align-self:center;">Усі операції</a>
+        </div>
+
+        <div class="ledger">
+          <div class="day"><span class="d">6 жовтня, вівторок</span><span class="s num">−1 487,50 ₴</span></div>
+          <div class="row">
+            <span class="tag" style="background:#1F7A5A"></span>
+            <span class="who"><b>Продукти</b><span>Сільпо, тижневі покупки</span></span>
+            <span class="amt num minus">−1 240,50 ₴</span>
+          </div>
+          <div class="row">
+            <span class="tag" style="background:#3E7FA6"></span>
+            <span class="who"><b>Транспорт</b><span>Проїзний на місяць</span></span>
+            <span class="amt num minus">−247,00 ₴</span>
+          </div>
+          <div class="day"><span class="d">5 жовтня, понеділок</span><span class="s num">+11 800,00 ₴</span></div>
+          <div class="row">
+            <span class="tag" style="background:#4C8C6B"></span>
+            <span class="who"><b>Зарплата</b><span>Аванс за жовтень</span></span>
+            <span class="amt num plus">+12 000,00 ₴</span>
+          </div>
+          <div class="row">
+            <span class="tag" style="background:#C58A2E"></span>
+            <span class="who"><b>Розваги</b><span>Квитки в кіно</span></span>
+            <span class="amt num minus">−200,00 ₴</span>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- 3 -->
+<section class="plate">
+  <h2>3. Операції з фільтрами</h2>
+  <p class="cap">Фільтри за періодом, типом і категорією комбінуються (FR-16); під ними — кількість і сума знайдених записів. Наведення на рядок відкриває дії «Змінити» і «Видалити» (показано на другому рядку).</p>
+  <div class="frame">
+    <div class="bar"><span class="dot"></span><span class="dot"></span><span class="dot"></span><span class="url">groshi.app/transactions?period=month&amp;type=expense</span></div>
+    <div class="app">
+      <aside class="side">
+        <div class="brand"><i></i>Гроші</div>
+        <nav class="nav">
+          <a href="#">Головна</a>
+          <a href="#" class="on">Операції</a>
+          <a href="#">Категорії</a>
+          <a href="#">Аналітика</a>
+        </nav>
+        <div class="foot">petro@example.com<br><a href="#" style="color:var(--ink-soft)">Вийти</a></div>
+      </aside>
+      <div class="main">
+        <div class="main-head">
+          <div><h3>Операції</h3><p>Усі записи вашого обліку</p></div>
+          <div class="btn btn-main">+ Додати операцію</div>
+        </div>
+
+        <div class="filters">
+          <span class="chip on">Жовтень 2026 <span class="car">▾</span></span>
+          <span class="chip on">Лише витрати <span class="car">▾</span></span>
+          <span class="chip">Усі категорії <span class="car">▾</span></span>
+          <span class="chip">Пошук за коментарем</span>
+          <a href="#" class="clear">Скинути фільтри</a>
+        </div>
+        <div class="result">Знайдено 24 операції на суму <b class="num">18 940,25 ₴</b></div>
+
+        <div class="ledger">
+          <div class="day"><span class="d">6 жовтня, вівторок</span><span class="s num">−1 487,50 ₴</span></div>
+          <div class="row">
+            <span class="tag" style="background:#1F7A5A"></span>
+            <span class="who"><b>Продукти</b><span>Сільпо, тижневі покупки</span></span>
+            <span class="amt num minus">−1 240,50 ₴</span>
+          </div>
+          <div class="row hov">
+            <span class="tag" style="background:#3E7FA6"></span>
+            <span class="who"><b>Транспорт</b><span>Проїзний на місяць</span></span>
+            <span class="acts"><span class="btn btn-ghost btn-sm">Змінити</span><span class="btn btn-danger btn-sm">Видалити</span></span>
+            <span class="amt num minus">−247,00 ₴</span>
+          </div>
+          <div class="day"><span class="d">4 жовтня, неділя</span><span class="s num">−3 410,00 ₴</span></div>
+          <div class="row">
+            <span class="tag" style="background:#6B5CA5"></span>
+            <span class="who"><b>Житло</b><span>Комунальні за вересень</span></span>
+            <span class="amt num minus">−3 160,00 ₴</span>
+          </div>
+          <div class="row">
+            <span class="tag" style="background:#A3566F"></span>
+            <span class="who"><b>Здоров'я</b><span>Аптека</span></span>
+            <span class="amt num minus">−250,00 ₴</span>
+          </div>
+          <div class="day"><span class="d">2 жовтня, п'ятниця</span><span class="s num">−845,00 ₴</span></div>
+          <div class="row">
+            <span class="tag" style="background:#1F7A5A"></span>
+            <span class="who"><b>Продукти</b><span>АТБ</span></span>
+            <span class="amt num minus">−845,00 ₴</span>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- 4 -->
+<section class="plate">
+  <h2>4. Форма операції</h2>
+  <p class="cap">Відкривається поверх поточної сторінки, тип за замовчуванням — витрата, дата — сьогоднішня, фокус у полі суми (FR-11). Праворуч — той самий екран зі станом помилки валідації (FR-12).</p>
+  <div style="display:grid;grid-template-columns:1fr 1fr;gap:20px;">
+    <div class="frame">
+      <div class="bar"><span class="dot"></span><span class="dot"></span><span class="dot"></span><span class="url">groshi.app/transactions/new</span></div>
+      <div class="modal-stage">
+        <div class="scrim"></div>
+        <div class="modal">
+          <h4>Нова операція</h4>
+          <div class="field">
+            <label>Тип</label>
+            <div class="seg"><div class="on-minus">Витрата</div><div>Дохід</div></div>
+          </div>
+          <div class="field">
+            <label>Сума</label>
+            <div class="input big focus"><span class="num">1 240,50</span><span class="ink-soft">₴</span></div>
+          </div>
+          <div class="field">
+            <label>Категорія</label>
+            <div class="input"><span><span class="tag" style="background:#1F7A5A;display:inline-block;width:8px;height:8px;border-radius:50%;margin-right:8px;"></span>Продукти</span><span class="car">▾</span></div>
+          </div>
+          <div class="field">
+            <label>Дата</label>
+            <div class="input"><span class="num">06.10.2026</span><span class="car">▾</span></div>
+          </div>
+          <div class="field">
+            <label>Коментар</label>
+            <div class="input"><span>Сільпо, тижневі покупки</span></div>
+          </div>
+          <div class="modal-foot">
+            <div class="btn btn-ghost">Скасувати</div>
+            <div class="btn btn-main">Додати операцію</div>
+          </div>
+        </div>
+      </div>
+    </div>
+    <div class="frame">
+      <div class="bar"><span class="dot"></span><span class="dot"></span><span class="dot"></span><span class="url">groshi.app/transactions/new</span></div>
+      <div class="modal-stage">
+        <div class="scrim"></div>
+        <div class="modal">
+          <h4>Нова операція</h4>
+          <div class="field">
+            <label>Тип</label>
+            <div class="seg"><div>Витрата</div><div class="on-plus">Дохід</div></div>
+          </div>
+          <div class="field">
+            <label>Сума</label>
+            <div class="input big err"><span class="num">0</span><span class="ink-soft">₴</span></div>
+            <div class="err-msg">Сума має бути більшою за 0</div>
+          </div>
+          <div class="field">
+            <label>Категорія</label>
+            <div class="input"><span><span style="display:inline-block;width:8px;height:8px;border-radius:50%;background:#4C8C6B;margin-right:8px;"></span>Зарплата</span><span class="car">▾</span></div>
+          </div>
+          <div class="field">
+            <label>Дата</label>
+            <div class="input err"><span class="num">15.11.2026</span><span class="car">▾</span></div>
+            <div class="err-msg">Дата не може бути в майбутньому</div>
+          </div>
+          <div class="field">
+            <label>Коментар</label>
+            <div class="input"><span class="ph">Необов'язково</span></div>
+          </div>
+          <div class="modal-foot">
+            <div class="btn btn-ghost">Скасувати</div>
+            <div class="btn btn-main" style="opacity:.4">Додати операцію</div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- 5 -->
+<section class="plate">
+  <h2>5. Категорії</h2>
+  <p class="cap">Два списки за типами операцій. Біля кожної категорії — колір, яким вона позначається у стрічці й на діаграмі, і кількість пов'язаних операцій: саме це число показується в попередженні перед видаленням (FR-10).</p>
+  <div class="frame">
+    <div class="bar"><span class="dot"></span><span class="dot"></span><span class="dot"></span><span class="url">groshi.app/categories</span></div>
+    <div class="app">
+      <aside class="side">
+        <div class="brand"><i></i>Гроші</div>
+        <nav class="nav">
+          <a href="#">Головна</a>
+          <a href="#">Операції</a>
+          <a href="#" class="on">Категорії</a>
+          <a href="#">Аналітика</a>
+        </nav>
+        <div class="foot">petro@example.com<br><a href="#" style="color:var(--ink-soft)">Вийти</a></div>
+      </aside>
+      <div class="main">
+        <div class="main-head">
+          <div><h3>Категорії</h3><p>Статті, за якими групуються ваші операції</p></div>
+          <div class="btn btn-main">+ Нова категорія</div>
+        </div>
+        <div class="cols">
+          <div class="col">
+            <h5>Витрати</h5>
+            <div class="cat"><span class="tag" style="background:#1F7A5A"></span><span class="nm">Продукти</span><span class="cnt num">86 операцій</span><span class="btn btn-ghost btn-sm">Змінити</span></div>
+            <div class="cat"><span class="tag" style="background:#6B5CA5"></span><span class="nm">Житло</span><span class="cnt num">12 операцій</span><span class="btn btn-ghost btn-sm">Змінити</span></div>
+            <div class="cat"><span class="tag" style="background:#3E7FA6"></span><span class="nm">Транспорт</span><span class="cnt num">31 операція</span><span class="btn btn-ghost btn-sm">Змінити</span></div>
+            <div class="cat"><span class="tag" style="background:#A3566F"></span><span class="nm">Здоров'я</span><span class="cnt num">9 операцій</span><span class="btn btn-ghost btn-sm">Змінити</span></div>
+            <div class="cat"><span class="tag" style="background:#C58A2E"></span><span class="nm">Розваги</span><span class="cnt num">17 операцій</span><span class="btn btn-ghost btn-sm">Змінити</span></div>
+            <div class="cat"><span class="tag" style="background:#5E6B73"></span><span class="nm">Одяг</span><span class="cnt num">6 операцій</span><span class="btn btn-ghost btn-sm">Змінити</span></div>
+          </div>
+          <div class="col">
+            <h5>Доходи</h5>
+            <div class="cat"><span class="tag" style="background:#4C8C6B"></span><span class="nm">Зарплата</span><span class="cnt num">14 операцій</span><span class="btn btn-ghost btn-sm">Змінити</span></div>
+            <div class="cat"><span class="tag" style="background:#1F7A5A"></span><span class="nm">Підробіток</span><span class="cnt num">5 операцій</span><span class="btn btn-ghost btn-sm">Змінити</span></div>
+            <div class="cat"><span class="tag" style="background:#C58A2E"></span><span class="nm">Подарунок</span><span class="cnt num">2 операції</span><span class="btn btn-ghost btn-sm">Змінити</span></div>
+            <div class="cat"><span class="tag" style="background:#5E6B73"></span><span class="nm">Інше</span><span class="cnt num">1 операція</span><span class="btn btn-ghost btn-sm">Змінити</span></div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- 6 -->
+<section class="plate">
+  <h2>6. Аналітика</h2>
+  <p class="cap">Структура витрат за період (FR-20) і динаміка доходів, витрат та балансу по місяцях (FR-21). Кожен сегмент діаграми дублюється рядком списку з сумою і відсотком, щоб зміст не передавався лише кольором.</p>
+  <div class="frame">
+    <div class="bar"><span class="dot"></span><span class="dot"></span><span class="dot"></span><span class="url">groshi.app/analytics?period=6m</span></div>
+    <div class="app">
+      <aside class="side">
+        <div class="brand"><i></i>Гроші</div>
+        <nav class="nav">
+          <a href="#">Головна</a>
+          <a href="#">Операції</a>
+          <a href="#">Категорії</a>
+          <a href="#" class="on">Аналітика</a>
+        </nav>
+        <div class="foot">petro@example.com<br><a href="#" style="color:var(--ink-soft)">Вийти</a></div>
+      </aside>
+      <div class="main">
+        <div class="main-head">
+          <div><h3>Аналітика</h3><p>Травень — жовтень 2026</p></div>
+          <span class="chip on">Останні 6 місяців <span class="car">▾</span></span>
+        </div>
+
+        <div class="charts">
+          <div class="card">
+            <h5>Структура витрат за жовтень</h5>
+            <svg viewBox="0 0 200 200" width="100%" height="180" role="img" aria-label="Кругова діаграма витрат за категоріями">
+              <g transform="rotate(-90 100 100)" fill="none" stroke-width="26">
+                <circle cx="100" cy="100" r="70" stroke="#1F7A5A" stroke-dasharray="149.5 439.8" stroke-dashoffset="0"/>
+                <circle cx="100" cy="100" r="70" stroke="#6B5CA5" stroke-dasharray="96.8 439.8" stroke-dashoffset="-149.5"/>
+                <circle cx="100" cy="100" r="70" stroke="#3E7FA6" stroke-dasharray="61.6 439.8" stroke-dashoffset="-246.3"/>
+                <circle cx="100" cy="100" r="70" stroke="#A3566F" stroke-dasharray="39.6 439.8" stroke-dashoffset="-307.9"/>
+                <circle cx="100" cy="100" r="70" stroke="#C58A2E" stroke-dasharray="35.2 439.8" stroke-dashoffset="-347.5"/>
+                <circle cx="100" cy="100" r="70" stroke="#5E6B73" stroke-dasharray="26.4 439.8" stroke-dashoffset="-382.7"/>
+                <circle cx="100" cy="100" r="70" stroke="#C9CEC8" stroke-dasharray="30.8 439.8" stroke-dashoffset="-409.1"/>
+              </g>
+              <text x="100" y="96" text-anchor="middle" font-family="Manrope" font-size="19" font-weight="700" fill="#16201D">18 940,25 ₴</text>
+              <text x="100" y="114" text-anchor="middle" font-family="Manrope" font-size="11" fill="#6B7670">витрати за жовтень</text>
+            </svg>
+            <div class="legend">
+              <div><i style="background:#1F7A5A"></i><span class="lg-n">Продукти</span><span class="lg-v num">6 439,69 ₴ · 34 %</span></div>
+              <div><i style="background:#6B5CA5"></i><span class="lg-n">Житло</span><span class="lg-v num">4 166,86 ₴ · 22 %</span></div>
+              <div><i style="background:#3E7FA6"></i><span class="lg-n">Транспорт</span><span class="lg-v num">2 651,64 ₴ · 14 %</span></div>
+              <div><i style="background:#A3566F"></i><span class="lg-n">Здоров'я</span><span class="lg-v num">1 704,62 ₴ · 9 %</span></div>
+              <div><i style="background:#C58A2E"></i><span class="lg-n">Розваги</span><span class="lg-v num">1 515,22 ₴ · 8 %</span></div>
+              <div><i style="background:#5E6B73"></i><span class="lg-n">Одяг</span><span class="lg-v num">1 136,42 ₴ · 6 %</span></div>
+              <div><i style="background:#C9CEC8"></i><span class="lg-n">Інше</span><span class="lg-v num">1 325,80 ₴ · 7 %</span></div>
+            </div>
+          </div>
+
+          <div class="card">
+            <h5>Динаміка по місяцях</h5>
+            <svg viewBox="0 0 420 260" width="100%" height="auto" role="img" aria-label="Графік доходів, витрат і балансу за шість місяців">
+              <g stroke="#E1E4DF" stroke-width="1">
+                <line x1="44" y1="30" x2="412" y2="30"/>
+                <line x1="44" y1="76" x2="412" y2="76"/>
+                <line x1="44" y1="122" x2="412" y2="122"/>
+                <line x1="44" y1="168" x2="412" y2="168"/>
+                <line x1="44" y1="214" x2="412" y2="214"/>
+              </g>
+              <g font-family="Manrope" font-size="10" fill="#6B7670" text-anchor="end">
+                <text x="38" y="33">40 тис.</text>
+                <text x="38" y="79">30 тис.</text>
+                <text x="38" y="125">20 тис.</text>
+                <text x="38" y="171">10 тис.</text>
+                <text x="38" y="217">0</text>
+              </g>
+              <g>
+                <rect x="56"  y="86"  width="18" height="128" fill="#1F7A5A" rx="2"/>
+                <rect x="76"  y="140" width="18" height="74"  fill="#B04A33" rx="2"/>
+                <rect x="116" y="76"  width="18" height="138" fill="#1F7A5A" rx="2"/>
+                <rect x="136" y="128" width="18" height="86"  fill="#B04A33" rx="2"/>
+                <rect x="176" y="100" width="18" height="114" fill="#1F7A5A" rx="2"/>
+                <rect x="196" y="122" width="18" height="92"  fill="#B04A33" rx="2"/>
+                <rect x="236" y="66"  width="18" height="148" fill="#1F7A5A" rx="2"/>
+                <rect x="256" y="134" width="18" height="80"  fill="#B04A33" rx="2"/>
+                <rect x="296" y="80"  width="18" height="134" fill="#1F7A5A" rx="2"/>
+                <rect x="316" y="118" width="18" height="96"  fill="#B04A33" rx="2"/>
+                <rect x="356" y="64"  width="18" height="150" fill="#1F7A5A" rx="2"/>
+                <rect x="376" y="127" width="18" height="87"  fill="#B04A33" rx="2"/>
+              </g>
+              <polyline points="75,178 135,170 195,186 255,160 315,166 375,152"
+                        fill="none" stroke="#16201D" stroke-width="2" stroke-linejoin="round"/>
+              <g fill="#16201D">
+                <circle cx="75" cy="178" r="3"/><circle cx="135" cy="170" r="3"/><circle cx="195" cy="186" r="3"/>
+                <circle cx="255" cy="160" r="3"/><circle cx="315" cy="166" r="3"/><circle cx="375" cy="152" r="3"/>
+              </g>
+              <g font-family="Manrope" font-size="10.5" fill="#6B7670" text-anchor="middle">
+                <text x="75" y="232">трав.</text>
+                <text x="135" y="232">черв.</text>
+                <text x="195" y="232">лип.</text>
+                <text x="255" y="232">серп.</text>
+                <text x="315" y="232">вер.</text>
+                <text x="375" y="232">жовт.</text>
+              </g>
+              <g font-family="Manrope" font-size="11" fill="#16201D">
+                <rect x="56" y="246" width="9" height="9" fill="#1F7A5A" rx="2"/><text x="71" y="255">доходи</text>
+                <rect x="132" y="246" width="9" height="9" fill="#B04A33" rx="2"/><text x="147" y="255">витрати</text>
+                <rect x="212" y="250" width="14" height="2" fill="#16201D"/><text x="232" y="255">баланс місяця</text>
+              </g>
+            </svg>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- 7 -->
+<section class="plate">
+  <h2>7. Порожні стани</h2>
+  <p class="cap">Перший запуск і фільтри без результату (FR-22). Обидва пояснюють ситуацію і пропонують одну дію замість повідомлення про відсутність даних.</p>
+  <div style="display:grid;grid-template-columns:1fr 1fr;gap:20px;">
+    <div class="frame">
+      <div class="bar"><span class="dot"></span><span class="dot"></span><span class="dot"></span><span class="url">groshi.app/dashboard</span></div>
+      <div style="background:var(--paper);padding:28px;">
+        <div class="balance" style="margin-bottom:20px;">
+          <div class="lbl">Поточний баланс</div>
+          <div class="val num">0,00 ₴</div>
+        </div>
+        <div class="empty">
+          <p>Тут з'являться ваші доходи і витрати, а баланс рахуватиметься сам. Почніть із першої операції.</p>
+          <div class="btn btn-main">+ Додати операцію</div>
+        </div>
+      </div>
+    </div>
+    <div class="frame">
+      <div class="bar"><span class="dot"></span><span class="dot"></span><span class="dot"></span><span class="url">groshi.app/transactions?category=health</span></div>
+      <div style="background:var(--paper);padding:28px;">
+        <div class="filters" style="margin-bottom:20px;">
+          <span class="chip on">Вересень 2026 <span class="car">▾</span></span>
+          <span class="chip on">Здоров'я <span class="car">▾</span></span>
+          <a href="#" class="clear">Скинути фільтри</a>
+        </div>
+        <div class="empty">
+          <p>За цими умовами операцій немає. Спробуйте інший період або категорію.</p>
+          <div class="btn btn-ghost">Скинути фільтри</div>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- 8 -->
+<section class="plate">
+  <h2>8. Мобільні екрани</h2>
+  <p class="cap">Ширина макетів — 360 px (NFR-14). Навігація переїжджає в нижню панель, кнопка додавання стає центральною і доступна на будь-якому екрані, форма операції відкривається панеллю знизу, щоб поля залишалися в зоні великого пальця.</p>
+  <div class="phones">
+    <div class="phone">
+      <div class="screen">
+        <div class="ph-top">
+          <div style="font-size:12.5px;color:var(--ink-soft);">Поточний баланс</div>
+          <div class="num plus" style="font-size:40px;font-weight:700;letter-spacing:-0.025em;line-height:1.1;">48 320,75 ₴</div>
+          <div style="font-size:12.5px;color:var(--ink-soft);margin-top:4px;">Жовтень: +32 500,00 / −18 940,25 ₴</div>
+        </div>
+        <div class="ph-body">
+          <div class="ledger">
+            <div class="day"><span class="d">6 жовтня</span><span class="s num">−1 487,50 ₴</span></div>
+            <div class="row">
+              <span class="tag" style="background:#1F7A5A"></span>
+              <span class="who"><b>Продукти</b><span>Сільпо</span></span>
+              <span class="amt num minus">−1 240,50 ₴</span>
+            </div>
+            <div class="row">
+              <span class="tag" style="background:#3E7FA6"></span>
+              <span class="who"><b>Транспорт</b><span>Проїзний</span></span>
+              <span class="amt num minus">−247,00 ₴</span>
+            </div>
+            <div class="day"><span class="d">5 жовтня</span><span class="s num">+11 800,00 ₴</span></div>
+            <div class="row">
+              <span class="tag" style="background:#4C8C6B"></span>
+              <span class="who"><b>Зарплата</b><span>Аванс</span></span>
+              <span class="amt num plus">+12 000,00 ₴</span>
+            </div>
+          </div>
+        </div>
+        <div class="tabbar">
+          <span class="on">Головна</span><span>Операції</span><span class="fab">+</span><span>Категорії</span><span>Аналітика</span>
+        </div>
+      </div>
+    </div>
+
+    <div class="phone">
+      <div class="screen sheet-stage" style="background:var(--ink);">
+        <div class="sheet">
+          <div class="grab"></div>
+          <div class="field">
+            <div class="seg"><div class="on-minus">Витрата</div><div>Дохід</div></div>
+          </div>
+          <div class="field">
+            <label>Сума</label>
+            <div class="input big focus"><span class="num">1 240,50</span><span>₴</span></div>
+          </div>
+          <div class="field">
+            <label>Категорія</label>
+            <div class="input"><span><span style="display:inline-block;width:8px;height:8px;border-radius:50%;background:#1F7A5A;margin-right:8px;"></span>Продукти</span><span class="car">▾</span></div>
+          </div>
+          <div class="field">
+            <label>Дата</label>
+            <div class="input"><span class="num">06.10.2026</span><span class="car">▾</span></div>
+          </div>
+          <div class="field">
+            <label>Коментар</label>
+            <div class="input"><span class="ph">Необов'язково</span></div>
+          </div>
+          <div class="btn btn-main btn-wide">Додати операцію</div>
+        </div>
+      </div>
+    </div>
+
+    <div class="phone">
+      <div class="screen">
+        <div class="ph-top">
+          <div style="font-size:19px;font-weight:600;">Аналітика</div>
+          <div style="margin-top:10px;"><span class="chip on">Жовтень 2026 <span class="car">▾</span></span></div>
+        </div>
+        <div class="ph-body">
+          <div class="card" style="padding:14px;">
+            <svg viewBox="0 0 200 200" width="100%" height="150" role="img" aria-label="Структура витрат за жовтень">
+              <g transform="rotate(-90 100 100)" fill="none" stroke-width="26">
+                <circle cx="100" cy="100" r="70" stroke="#1F7A5A" stroke-dasharray="149.5 439.8" stroke-dashoffset="0"/>
+                <circle cx="100" cy="100" r="70" stroke="#6B5CA5" stroke-dasharray="96.8 439.8" stroke-dashoffset="-149.5"/>
+                <circle cx="100" cy="100" r="70" stroke="#3E7FA6" stroke-dasharray="61.6 439.8" stroke-dashoffset="-246.3"/>
+                <circle cx="100" cy="100" r="70" stroke="#A3566F" stroke-dasharray="39.6 439.8" stroke-dashoffset="-307.9"/>
+                <circle cx="100" cy="100" r="70" stroke="#C58A2E" stroke-dasharray="35.2 439.8" stroke-dashoffset="-347.5"/>
+                <circle cx="100" cy="100" r="70" stroke="#5E6B73" stroke-dasharray="26.4 439.8" stroke-dashoffset="-382.7"/>
+                <circle cx="100" cy="100" r="70" stroke="#C9CEC8" stroke-dasharray="30.8 439.8" stroke-dashoffset="-409.1"/>
+              </g>
+              <text x="100" y="97" text-anchor="middle" font-family="Manrope" font-size="17" font-weight="700" fill="#16201D">18 940,25 ₴</text>
+              <text x="100" y="114" text-anchor="middle" font-family="Manrope" font-size="10" fill="#6B7670">витрати</text>
+            </svg>
+            <div class="legend" style="margin-top:10px;">
+              <div><i style="background:#1F7A5A"></i><span class="lg-n">Продукти</span><span class="lg-v num">34 %</span></div>
+              <div><i style="background:#6B5CA5"></i><span class="lg-n">Житло</span><span class="lg-v num">22 %</span></div>
+              <div><i style="background:#3E7FA6"></i><span class="lg-n">Транспорт</span><span class="lg-v num">14 %</span></div>
+            </div>
+          </div>
+          <div style="margin-top:14px;text-align:center;"><span class="toast">Операцію додано</span></div>
+        </div>
+        <div class="tabbar">
+          <span>Головна</span><span>Операції</span><span class="fab">+</span><span>Категорії</span><span class="on">Аналітика</span>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+</div>
+</body>
+</html>
