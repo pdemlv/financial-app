@@ -1,0 +1,140 @@
+# Безперервна доставка. Середовища, залежності й стратегія — doc/deployment-plan.md, розділи 3–5.
+# Відкат після невдалого smoke-прогону — розділ 7 (NFR-16).
+name: Deploy
+
+on:
+  push:
+    branches: [develop, master]
+  schedule:
+    # Нічний повний e2e-прогін на staging (doc/test-plan.md, розділ 2.1).
+    - cron: '0 2 * * *'
+  workflow_dispatch:
+    inputs:
+      environment:
+        description: Середовище для ручного розгортання
+        type: choice
+        options: [staging, production]
+        default: staging
+
+env:
+  NODE_VERSION: '20'
+
+jobs:
+  # ---------------------------------------------------------------- staging
+  deploy-staging:
+    name: Розгортання на staging
+    # Вимикач: поки в репозиторії немає змінної DEPLOY_ENABLED=true і секретів Vercel,
+    # job пропускається, а не падає.
+    if: >-
+      vars.DEPLOY_ENABLED == 'true' &&
+      (github.ref == 'refs/heads/develop' || inputs.environment == 'staging')
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    environment:
+      name: staging
+      url: ${{ steps.deploy.outputs.url }}
+    outputs:
+      url: ${{ steps.deploy.outputs.url }}
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+          cache: npm
+      - run: npm ci
+      # Порядок обов'язковий: міграції застосовуються ДО запуску нової версії коду
+      # (doc/deployment-plan.md, розділ 4).
+      - name: Міграції бази даних (гілка staging у Neon)
+        run: npx prisma migrate deploy
+        env:
+          DATABASE_URL: ${{ secrets.DATABASE_URL }}
+      - name: Деплой на Vercel
+        id: deploy
+        run: |
+          url=$(npx vercel deploy --yes --token="$VERCEL_TOKEN")
+          echo "url=$url" >> "$GITHUB_OUTPUT"
+        env:
+          VERCEL_TOKEN: ${{ secrets.VERCEL_TOKEN }}
+          VERCEL_ORG_ID: ${{ secrets.VERCEL_ORG_ID }}
+          VERCEL_PROJECT_ID: ${{ secrets.VERCEL_PROJECT_ID }}
+
+  verify-staging:
+    name: Smoke + e2e на staging
+    needs: deploy-staging
+    if: ${{ !cancelled() && needs.deploy-staging.result == 'success' }}
+    runs-on: ubuntu-latest
+    timeout-minutes: 25
+    env:
+      BASE_URL: ${{ needs.deploy-staging.outputs.url || secrets.STAGING_URL }}
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+          cache: npm
+      - run: npm ci
+      - run: npx playwright install --with-deps
+      # Спочатку швидкий smoke: якщо він червоний, повний e2e запускати немає сенсу.
+      - name: Smoke-набір
+        run: npm run test:smoke
+      - name: Повний e2e-набір
+        run: npm run test:e2e
+      - name: Звіт Playwright
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: playwright-report-staging
+          path: playwright-report/
+          retention-days: 14
+
+  # ------------------------------------------------------------- production
+  deploy-production:
+    name: Розгортання на production
+    # Середовище production захищене Required reviewers: крок чекає ручного підтвердження.
+    if: >-
+      vars.DEPLOY_ENABLED == 'true' &&
+      (github.ref == 'refs/heads/master' || inputs.environment == 'production')
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    environment:
+      name: production
+      url: ${{ steps.deploy.outputs.url }}
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+          cache: npm
+      - run: npm ci
+      - name: Резервна копія перед релізом (NFR-15)
+        run: echo "Перевірити наявність свіжої копії Neon за останні 24 години"
+      - name: Міграції бази даних
+        run: npx prisma migrate deploy
+        env:
+          DATABASE_URL: ${{ secrets.DATABASE_URL }}
+      - name: Деплой на Vercel
+        id: deploy
+        run: |
+          url=$(npx vercel deploy --prod --yes --token="$VERCEL_TOKEN")
+          echo "url=$url" >> "$GITHUB_OUTPUT"
+        env:
+          VERCEL_TOKEN: ${{ secrets.VERCEL_TOKEN }}
+          VERCEL_ORG_ID: ${{ secrets.VERCEL_ORG_ID }}
+          VERCEL_PROJECT_ID: ${{ secrets.VERCEL_PROJECT_ID }}
+
+      # Smoke виконується в тому самому job, щоб відкат був доступний одразу.
+      - run: npx playwright install --with-deps chromium
+      - name: Smoke-набір на production
+        id: smoke
+        run: npm run test:smoke
+        env:
+          BASE_URL: ${{ steps.deploy.outputs.url }}
+          SMOKE_EMAIL: ${{ secrets.SMOKE_EMAIL }}
+          SMOKE_PASSWORD: ${{ secrets.SMOKE_PASSWORD }}
+
+      # NFR-16: повернення до попередньої стабільної версії не довше ніж за 10 хвилин.
+      - name: Автоматичний відкат при невдалому smoke
+        if: failure() && steps.smoke.outcome == 'failure'
+        run: npx vercel rollback --yes --token="$VERCEL_TOKEN"
+        env:
+          VERCEL_TOKEN: ${{ secrets.VERCEL_TOKEN }}
