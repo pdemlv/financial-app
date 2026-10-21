@@ -1,0 +1,28 @@
+{
+  "name": "finance-tracker",
+  "version": "0.1.0",
+  "private": true,
+  "description": "Веб-сайт для персонального фінансового обліку",
+  "scripts": {
+    "test": "jest --selectProjects unit",
+    "test:unit": "jest --selectProjects unit --coverage",
+    "test:integration": "jest --selectProjects integration --runInBand",
+    "test:api": "jest --selectProjects api --runInBand",
+    "test:e2e": "playwright test",
+    "test:smoke": "playwright test --grep @smoke",
+    "test:all": "jest --runInBand && playwright test",
+    "typecheck": "tsc --noEmit"
+  },
+  "devDependencies": {
+    "@playwright/test": "1.48.2",
+    "@prisma/client": "5.22.0",
+    "@types/jest": "29.5.14",
+    "@types/node": "20.17.6",
+    "@types/supertest": "6.0.2",
+    "jest": "29.7.0",
+    "prisma": "5.22.0",
+    "supertest": "7.0.0",
+    "ts-jest": "29.2.5",
+    "typescript": "5.6.3"
+  }
+}
