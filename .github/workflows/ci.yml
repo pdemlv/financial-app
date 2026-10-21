@@ -1,0 +1,104 @@
+# Безперервна інтеграція. Опис pipeline — doc/deployment-plan.md, розділ 2.
+# Склад job відповідає тест-плану (doc/test-plan.md, розділ 7.3).
+name: CI
+
+on:
+  push:
+    branches: [master, develop]
+  pull_request:
+    branches: [master, develop]
+
+# Новий push у ту саму гілку скасовує попередній прогін, щоб не витрачати хвилини раннерів.
+concurrency:
+  group: ci-${{ github.ref }}
+  cancel-in-progress: true
+
+env:
+  NODE_VERSION: '20'
+
+jobs:
+  lint:
+    name: lint
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+          cache: npm
+      - run: npm ci
+      # Клієнт Prisma генерується, а не зберігається в репозиторії: без цього кроку tsc не бачить типів.
+      - run: npx prisma generate
+      - name: Перевірка типів
+        run: npm run typecheck
+      # TODO (NFR-18): додати кроки `npm run lint` і `npm run format:check`
+      # після встановлення ESLint і Prettier — зараз їх немає в devDependencies.
+
+  unit:
+    name: unit
+    needs: lint
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+          cache: npm
+      - run: npm ci
+      - run: npx prisma generate
+      # Поріг покриття 80 % для calculations.ts і money.ts заданий у jest.config.js (NFR-18):
+      # job падає автоматично, якщо покриття нижче.
+      - name: Модульні тести з покриттям
+        run: npm run test:unit
+      - name: Звіт покриття
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: coverage-report
+          path: coverage/
+          retention-days: 14
+
+  integration-api:
+    name: integration-api
+    needs: unit
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    services:
+      postgres:
+        image: postgres:16
+        env:
+          POSTGRES_USER: postgres
+          POSTGRES_PASSWORD: postgres
+          POSTGRES_DB: finance_test
+        ports: ['5432:5432']
+        options: >-
+          --health-cmd pg_isready
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
+    env:
+      DATABASE_URL: postgresql://postgres:postgres@localhost:5432/finance_test
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+          cache: npm
+      - run: npm ci
+      - run: npx prisma generate
+      # `db push` замість `migrate deploy`: теки prisma/migrations ще немає.
+      # Після появи першої міграції замінити на `npx prisma migrate deploy`.
+      - name: Схема бази даних
+        run: npx prisma db push --skip-generate
+      # TODO: коли з'явиться код застосунку — зібрати й запустити його тут
+      # і передати BASE_URL у наступні кроки:
+      #   - run: npm run build
+      #   - run: npm start & npx wait-on http://localhost:3000
+      # Поки BASE_URL не заданий, describeIfServer (tests/helpers/api.ts)
+      # позначає ці тести як пропущені, і job лишається зеленим.
+      - name: Інтеграційні тести
+        run: npm run test:integration
+      - name: API-тести
+        run: npm run test:api
