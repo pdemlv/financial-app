@@ -1,0 +1,56 @@
+// Модель даних з doc/architecture.md, розділ 4.
+// Використовується застосунком і інтеграційними тестами (tests/integration) для перевірки стану БД.
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+enum TxType {
+  INCOME
+  EXPENSE
+}
+
+model User {
+  id           String        @id @default(uuid()) @db.Uuid
+  email        String        @unique // зберігається в нижньому регістрі
+  passwordHash String // bcrypt (NFR-4)
+  createdAt    DateTime      @default(now())
+  categories   Category[]
+  transactions Transaction[]
+}
+
+model Category {
+  id           String        @id @default(uuid()) @db.Uuid
+  userId       String        @db.Uuid
+  name         String        @db.VarChar(30)
+  type         TxType
+  color        String        @db.VarChar(7)
+  isDefault    Boolean       @default(false)
+  user         User          @relation(fields: [userId], references: [id], onDelete: Cascade)
+  transactions Transaction[]
+
+  @@unique([userId, type, name])
+}
+
+model Transaction {
+  id         String    @id @default(uuid()) @db.Uuid
+  userId     String    @db.Uuid
+  categoryId String?   @db.Uuid // null = «Без категорії»
+  type       TxType
+  // У копійках. BigInt, а не Int: максимум FR-12 (1 000 000 000 ₴ = 10^11 коп.) не вміщується в int4.
+  // Перевірка amount > 0 додається SQL-міграцією (CHECK), Prisma її не описує.
+  amount     BigInt
+  occurredAt DateTime  @db.Date
+  comment    String?   @db.VarChar(200)
+  createdAt  DateTime  @default(now())
+  updatedAt  DateTime  @updatedAt
+  user       User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  category   Category? @relation(fields: [categoryId], references: [id], onDelete: SetNull)
+
+  @@index([userId, occurredAt])
+}
